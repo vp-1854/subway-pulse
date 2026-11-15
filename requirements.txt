@@ -1,0 +1,32 @@
+# Subway Pulse — pinned dependencies (Python 3.11+).
+# Install for exact reproducibility: pip install -r requirements-lock.txt
+# Install for development:           pip install -r requirements.txt
+#
+# Why pyspark is pinned to 3.5.x:
+#   The spark-sql-kafka-0-10_2.12:3.5.0 Maven package is built against
+#   Scala 2.12. PySpark 4.x ships Spark 4.0 which is Scala 2.13, and the
+#   connector throws `NoSuchMethodError: scala.Predef$.wrapRefArray(...)`
+#   at startup. Stay on 3.5.x.
+
+# --- Streaming + ingestion ---
+pyspark==3.5.3
+kafka-python==2.0.2
+gtfs-realtime-bindings==2.0.0
+protobuf==5.29.4
+requests==2.32.4
+
+# --- Storage clients ---
+cassandra-driver==3.29.3
+pymongo==4.17.0
+
+# --- Serving + dashboard ---
+fastapi==0.136.1
+uvicorn==0.46.0
+streamlit==1.57.0
+streamlit-autorefresh==1.0.1
+pydeck==0.9.1
+
+# --- Data tooling + ad-hoc validation ---
+pyarrow==24.0.0
+numpy==2.4.4
+pandas==3.0.2
