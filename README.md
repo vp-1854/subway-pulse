@@ -51,13 +51,20 @@ python infra/init_mongo.py
 python infra/verify_connections.py
 ```
 
-**4. Start the serving layer**
+**4. Start ingestion**
+```bash
+python -m ingestion.gtfs_producer    # live MTA → Kafka, every 15s
+python -m ingestion.weather_poller   # NWS → Cassandra + Kafka, every 15min
+python -m ingestion.gtfs_monitor     # one-line throughput report every 60s
+```
+
+**5. Start the serving layer**
 ```bash
 uvicorn serving.main:app --reload
 ```
 API available at `http://localhost:8000`. Check `http://localhost:8000/health` to confirm MongoDB and Cassandra are reachable.
 
-**5. Run the dashboard**
+**6. Run the dashboard**
 ```bash
 streamlit run dashboard/app.py
 ```
@@ -94,7 +101,7 @@ All connection settings are read from environment variables:
 ```
 subway-pulse/
 ├── infra/           # Docker Compose, DB init scripts
-├── ingestion/       # Shared Kafka topic and partition config
+├── ingestion/       # Kafka producers, GTFS + weather pollers
 ├── processing/      # Shared config, Spark helper, score formulas
 ├── serving/         # FastAPI app (health check)
 ├── dashboard/       # Streamlit app (status page)
@@ -111,6 +118,10 @@ subway-pulse/
 | Check consumer lag | `docker exec -it subway_kafka kafka-consumer-groups --bootstrap-server localhost:9092 --describe --all-groups` |
 | Tail DLQ | `docker exec -it subway_kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic gtfs-dlq --from-beginning --max-messages 10` |
 | Spark UI | <http://localhost:8080> |
+
+See [`docs/kafka_config.md`](docs/kafka_config.md) for partition layout, consumer
+groups, and tuning. See [`docs/mta_feeds.md`](docs/mta_feeds.md) for the MTA
+feed URL list.
 
 ---
 
