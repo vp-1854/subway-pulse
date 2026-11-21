@@ -72,7 +72,23 @@ Dashboard available at `http://localhost:8501`.
 
 ---
 
-## Running Tests
+## Processing Jobs
+
+The processing scripts are CLI-driven and default to local paths under `data/`.
+
+```bash
+python -m processing.download_datasets --skip-noaa
+python -m processing.profile_data
+python -m processing.build_bridge_table
+python -m processing.clean_ridership
+python -m processing.clean_weather
+python -m processing.join_ridership_weather
+python -m processing.build_baseline --sink parquet
+```
+
+Set `NOAA_TOKEN` before running `processing.download_datasets` without `--skip-noaa`. Use `--sink cassandra` or `--sink parquet,cassandra` for batch jobs after Spark has the Cassandra connector available.
+
+The historical window is one year, 2025-11-01 to 2026-09-30 (set in `processing/config.py` as `DATA_WINDOW_START` / `DATA_WINDOW_END`, or via the `SUBWAY_PULSE_WINDOW_START` / `SUBWAY_PULSE_WINDOW_END` environment variables). The downloader fetches only the `Beginning 2025` ridership dataset inside that window, and NOAA weather for the same dates. Override with `--ridership-since`, `--ridership-until`, `--start-date` and `--end-date`. `processing.clean_ridership` also keeps only that window, and stores `date`, `hour_of_day` and `day_of_week` in NYC local time (`day_of_week` follows Spark: Sunday = 1). If you already downloaded older raw files, delete them or pass `--no-skip-existing` so the downloader does not reuse them.
 
 Run local tests:
 ```bash
@@ -102,9 +118,10 @@ All connection settings are read from environment variables:
 subway-pulse/
 ├── infra/           # Docker Compose, DB init scripts
 ├── ingestion/       # Kafka producers, GTFS + weather pollers
-├── processing/      # Shared config, Spark helper, score formulas
+├── processing/      # PySpark batch jobs
 ├── serving/         # FastAPI app (health check)
 ├── dashboard/       # Streamlit app (status page)
+├── data/            # Bridge table and local data files
 └── docs/            # Design notes and schemas
 ```
 
