@@ -58,13 +58,21 @@ python -m ingestion.weather_poller   # NWS → Cassandra + Kafka, every 15min
 python -m ingestion.gtfs_monitor     # one-line throughput report every 60s
 ```
 
-**5. Start the serving layer**
+**5. Start streaming consumers**
+```bash
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 \
+    -m processing.gtfs_vehicle_consumer
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 \
+    -m processing.gtfs_trips_consumer
+```
+
+**6. Start the serving layer**
 ```bash
 uvicorn serving.main:app --reload
 ```
 API available at `http://localhost:8000`. Check `http://localhost:8000/health` to confirm MongoDB and Cassandra are reachable.
 
-**6. Run the dashboard**
+**7. Run the dashboard**
 ```bash
 streamlit run dashboard/app.py
 ```
@@ -118,7 +126,7 @@ All connection settings are read from environment variables:
 subway-pulse/
 ├── infra/           # Docker Compose, DB init scripts
 ├── ingestion/       # Kafka producers, GTFS + weather pollers
-├── processing/      # PySpark batch jobs
+├── processing/      # PySpark batch and streaming jobs
 ├── serving/         # FastAPI app (health check)
 ├── dashboard/       # Streamlit app (status page)
 ├── data/            # Bridge table and local data files
